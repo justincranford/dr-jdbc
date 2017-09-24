@@ -26,36 +26,46 @@ public class InvocationHandlerDemo implements InvocationHandler {
 		if (null == this.proxiedObject) {
 			throw new NullPointerException();
 		} else if (methodName.equals("hashCode")) {
+			System.out.println("*** Overriding method " + methodName + " ***");
 			return Integer.valueOf(0);	// override proxiedObject.hashCode()
 		} else if (methodName.equals("equals")) {
+			System.out.println("*** Overriding method " + methodName + " ***");
 			return Boolean.TRUE;		// override proxiedObject.equals()
 		}
+		System.out.println("*** Not overriding method " + methodName + " ***");
 		return method.invoke(this.proxiedObject, args);	// pass-through other proxiedObject methods like toString()
 	}
 
-	public static Object create(Object object) {
-		Object proxy = (Object) Proxy.newProxyInstance(
+	public static Object create(Object objectWithoutInterface) {
+		Object proxy = (Object) Proxy.newProxyInstance(			// apparently this works for the object even though it does not implement the interface
 			InvocationHandlerDemo.class.getClassLoader(),
-			new Class[] { EmptyInterface.class },	// interface(s) only, never classes
-			new InvocationHandlerDemo(object)		// invocation wrapper for object
+			new Class[] { EmptyInterface.class },				// interface(s) only, never concrete class(es)
+			new InvocationHandlerDemo(objectWithoutInterface)	// invocation wrapper for object
 		);
 		return proxy;
 	}
 
 	public static void main(String[] args) {
-		Object object = new Object();
-		Object proxiedObject = InvocationHandlerDemo.create(object);
-		System.out.println("Original hashCode:  " + object.hashCode());			// not proxy
+		Object objectWithoutInterface = new Object();
+		Object proxiedWithInterface = InvocationHandlerDemo.create(objectWithoutInterface);	// object does not need to implement interface used inside create?
+		System.out.println("============================================================================================");
 		System.out.println(" ");
-		System.out.println("Proxied  hashCode:  " + proxiedObject.hashCode());	// proxied, and method is intercepted
+		System.out.println("Original hashCode:  " + objectWithoutInterface.hashCode());		// not proxied
 		System.out.println(" ");
-		System.out.println("Original toString   " + object.toString());			// not proxied
+		System.out.println("Proxied  hashCode:  " + proxiedWithInterface.hashCode());		// proxied, and method is intercepted
 		System.out.println(" ");
-		System.out.println("Proxied  toString:  " + proxiedObject.toString());	// proxied, but method is not intercepted
+		System.out.println("============================================================================================");
 		System.out.println(" ");
-		System.out.println("Original equals:    " + object.equals(null));			// not proxied
+		System.out.println("Original toString   " + objectWithoutInterface.toString());		// not proxied
 		System.out.println(" ");
-		System.out.println("Proxied  equals:    " + proxiedObject.equals(null));	// proxied, but method is not intercepted
+		System.out.println("Proxied  toString:  " + proxiedWithInterface.toString());		// proxied, but method is not intercepted
 		System.out.println(" ");
+		System.out.println("============================================================================================");
+		System.out.println(" ");
+		System.out.println("Original equals:    " + objectWithoutInterface.equals(null));	// not proxied
+		System.out.println(" ");
+		System.out.println("Proxied  equals:    " + proxiedWithInterface.equals(null));		// proxied, and method is intercepted
+		System.out.println(" ");
+		System.out.println("============================================================================================");
 	}
 }
